@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String       @id @default(uuid())
+  fullName      String
+  matricNumber  String       @unique
+  email         String       @unique
+  passwordHash  String
+  isVerified    Boolean      @default(false)
+  verifyToken   String?
+  resetToken    String?
+  resetTokenExp DateTime?
+  createdAt     DateTime     @default(now())
+  assessments   Assessment[]
+}
+
+model Assessment {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
+  answers            Json     // raw answers: { [questionId]: number (0-3) }
+  depressionScore    Int
+  anxietyScore       Int
+  stressScore        Int
+  depressionSeverity String   // "normal" | "mild" | "moderate" | "severe" | "extremely_severe"
+  anxietySeverity    String
+  stressSeverity     String
+  createdAt          DateTime @default(now())
+}
