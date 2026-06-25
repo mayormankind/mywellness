@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = signJwt({
+    const token = await signJwt({
       userId: user.id,
       email: user.email,
     });

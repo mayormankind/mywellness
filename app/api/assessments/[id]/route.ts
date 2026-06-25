@@ -31,7 +31,7 @@ export async function GET(
       );
     }
 
-    const payload = verifyJwt(token);
+    const payload = await verifyJwt(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid token' },

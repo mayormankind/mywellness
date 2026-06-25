@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyJwt(token);
+    const payload = await verifyJwt(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid token' },
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const payload = verifyJwt(token);
+    const payload = await verifyJwt(token);
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid token' },

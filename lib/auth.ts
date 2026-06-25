@@ -1,13 +1,16 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'fallback-secret-change-in-production'
+);
 const JWT_EXPIRY = '2h';
 
-export interface JWTPayload {
+export interface AuthPayload {
   userId: string;
   email: string;
+  [key: string]: unknown;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -19,13 +22,18 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-export function signJwt(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+export async function signJwt(payload: AuthPayload): Promise<string> {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(JWT_EXPIRY)
+    .sign(JWT_SECRET);
 }
 
-export function verifyJwt(token: string): JWTPayload | null {
+export async function verifyJwt(token: string): Promise<AuthPayload | null> {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as unknown as AuthPayload;
   } catch (error) {
     return null;
   }

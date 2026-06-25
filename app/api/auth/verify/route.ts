@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyJwt(token);
+    const payload = await verifyJwt(token);
 
     if (!payload) {
       return NextResponse.json(
