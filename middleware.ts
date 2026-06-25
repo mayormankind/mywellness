@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyJwt } from '@/lib/auth';
+import { jwtVerify } from 'jose';
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'fallback-secret-change-in-production'
+);
 
 const protectedRoutes = ['/dashboard', '/questionnaire', '/results', '/history'];
 
@@ -18,8 +22,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    const payload = verifyJwt(token);
-    if (!payload) {
+    try {
+      await jwtVerify(token, JWT_SECRET);
+    } catch {
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }

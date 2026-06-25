@@ -2,8 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyJwt, getAuthToken } from '@/lib/auth';
 import { assessmentAnswersSchema, type AssessmentAnswers } from '@/lib/validation';
-import { calculateScoringResult } from '@/lib/scoring';
+import { calculateScoringResult, type Severity } from '@/lib/scoring';
 import { generateFeedback } from '@/lib/feedback';
+
+function enrichAssessment(a: any) {
+  const classifications = {
+    depression: a.depressionSeverity as Severity,
+    anxiety: a.anxietySeverity as Severity,
+    stress: a.stressSeverity as Severity,
+  };
+  return {
+    ...a,
+    scores: { depression: a.depressionScore, anxiety: a.anxietyScore, stress: a.stressScore },
+    classifications,
+    feedback: generateFeedback(classifications),
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +46,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(assessments);
+    return NextResponse.json(assessments.map(enrichAssessment));
 
   } catch (error) {
     console.error('Assessments fetch error:', error);
@@ -80,9 +94,12 @@ export async function POST(request: NextRequest) {
       data: {
         userId: payload.userId,
         answers,
-        scores: scoringResult.scores,
-        classifications: scoringResult.classifications,
-        feedback: feedbackResult,
+        depressionScore: scoringResult.scores.depression,
+        anxietyScore: scoringResult.scores.anxiety,
+        stressScore: scoringResult.scores.stress,
+        depressionSeverity: scoringResult.classifications.depression,
+        anxietySeverity: scoringResult.classifications.anxiety,
+        stressSeverity: scoringResult.classifications.stress,
       }
     });
 

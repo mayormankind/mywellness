@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyJwt, getAuthToken } from '@/lib/auth';
+import { type Severity } from '@/lib/scoring';
+import { generateFeedback } from '@/lib/feedback';
+
+function enrichAssessment(a: any) {
+  const classifications = {
+    depression: a.depressionSeverity as Severity,
+    anxiety: a.anxietySeverity as Severity,
+    stress: a.stressSeverity as Severity,
+  };
+  return {
+    ...a,
+    scores: { depression: a.depressionScore, anxiety: a.anxietyScore, stress: a.stressScore },
+    classifications,
+    feedback: generateFeedback(classifications),
+  };
+}
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = await getAuthToken();
@@ -23,9 +39,10 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
     const assessment = await prisma.assessment.findUnique({
       where: {
-        id: params.id,
+        id,
       },
     });
 
@@ -43,7 +60,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(assessment);
+    return NextResponse.json(enrichAssessment(assessment));
 
   } catch (error) {
     console.error('Assessment fetch error:', error);

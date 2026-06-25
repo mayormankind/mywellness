@@ -1,17 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { BrainIcon, Loader2Icon, CheckCircleIcon, AlertCircleIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function VerifyEmailPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     const token = searchParams.get('token');
-    
+
     if (!token) {
       setStatus('error');
       setMessage('Invalid verification link. Please request a new verification email.');
@@ -30,7 +33,7 @@ export default function VerifyEmailPage() {
           setStatus('error');
           setMessage(data.error || 'Verification failed');
         }
-      } catch (err) {
+      } catch {
         setStatus('error');
         setMessage('An error occurred. Please try again.');
       }
@@ -40,50 +43,58 @@ export default function VerifyEmailPage() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Email Verification
-          </h2>
+    <div className="min-h-screen bg-secondary flex flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+            <BrainIcon className="w-5 h-5 text-white" />
+          </div>
+          <span className="font-bold text-xl text-foreground">
+            My<span className="text-primary">Wellness</span>
+          </span>
         </div>
 
-        {status === 'loading' && (
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            <p className="mt-4 text-gray-600">Verifying your email...</p>
-          </div>
-        )}
+        <Card>
+          <CardContent className="pt-8 pb-8 text-center space-y-4">
+            {status === 'loading' && (
+              <>
+                <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto">
+                  <Loader2Icon className="w-7 h-7 text-primary animate-spin" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground">Verifying your email</h2>
+                <p className="text-sm text-muted-foreground font-light">
+                  Please wait while we verify your email address…
+                </p>
+              </>
+            )}
 
-        {status === 'success' && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-            <h3 className="text-lg font-medium">Success!</h3>
-            <p className="mt-2">{message}</p>
-            <div className="mt-4">
-              <a
-                href="/login"
-                className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                Proceed to Login
-              </a>
-            </div>
-          </div>
-        )}
+            {status === 'success' && (
+              <>
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <CheckCircleIcon className="w-7 h-7 text-primary" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground">Email Verified!</h2>
+                <p className="text-sm text-muted-foreground font-light max-w-xs mx-auto">{message}</p>
+                <Link href="/login">
+                  <Button className="mt-2 w-full">Proceed to Login</Button>
+                </Link>
+              </>
+            )}
 
-        {status === 'error' && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            <h3 className="text-lg font-medium">Verification Failed</h3>
-            <p className="mt-2">{message}</p>
-            <div className="mt-4">
-              <a
-                href="/login"
-                className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                Return to Login
-              </a>
-            </div>
-          </div>
-        )}
+            {status === 'error' && (
+              <>
+                <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                  <AlertCircleIcon className="w-7 h-7 text-destructive" />
+                </div>
+                <h2 className="text-xl font-bold text-foreground">Verification Failed</h2>
+                <p className="text-sm text-muted-foreground font-light max-w-xs mx-auto">{message}</p>
+                <Link href="/login">
+                  <Button className="mt-2 w-full">Return to Login</Button>
+                </Link>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

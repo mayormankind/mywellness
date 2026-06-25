@@ -29,12 +29,14 @@ export const resetPasswordSchema = z.object({
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
-export const assessmentAnswersSchema = z.record(
-  z.string(),
-  z.number().int().min(0).max(3)
-).refine(
-  (answers) => Object.keys(answers).length === 21,
-  'All 21 questions must be answered'
-);
+export const assessmentAnswersSchema = z.object({
+  answers: z.record(
+    z.string(),
+    z.number().int().min(0).max(3)
+  ).refine(
+    (answers) => Object.keys(answers).length === 21,
+    'All 21 questions must be answered'
+  ),
+});
 
 export type AssessmentAnswers = z.infer<typeof assessmentAnswersSchema>;

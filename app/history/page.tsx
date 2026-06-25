@@ -2,27 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+  ResponsiveContainer,
+} from 'recharts';
+import { ClipboardListIcon, ExternalLinkIcon, GitCompareArrowsIcon } from 'lucide-react';
+import AppNav from '@/components/app-nav';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -55,210 +50,160 @@ export default function HistoryPage() {
     fetchAssessments();
   }, [router]);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'info':
-        return 'bg-blue-100 text-blue-800';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'danger':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getBadge = (severity: string) => {
+    if (severity === 'info') return 'bg-primary/10 text-primary';
+    if (severity === 'warning') return 'bg-yellow-100 text-yellow-800';
+    if (severity === 'danger') return 'bg-red-100 text-red-700';
+    return 'bg-muted text-muted-foreground';
   };
 
-  const chartData = {
-    labels: [...assessments].reverse().map((a) => new Date(a.createdAt).toLocaleDateString()),
-    datasets: [
-      {
-        label: 'Depression',
-        data: [...assessments].reverse().map((a) => a.scores.depression),
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.1,
-      },
-      {
-        label: 'Anxiety',
-        data: [...assessments].reverse().map((a) => a.scores.anxiety),
-        borderColor: 'rgb(16, 185, 129)',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        tension: 0.1,
-      },
-      {
-        label: 'Stress',
-        data: [...assessments].reverse().map((a) => a.scores.stress),
-        borderColor: 'rgb(245, 158, 11)',
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        tension: 0.1,
-      },
-    ],
-  };
+  const sorted = [...assessments].reverse();
 
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: 'Score Trends Over Time',
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 42,
-      },
-    },
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading your assessment history...</p>
-        </div>
-      </div>
-    );
-  }
+  const chartData = sorted.map((a) => ({
+    date: new Date(a.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    Depression: a.scores.depression,
+    Anxiety: a.scores.anxiety,
+    Stress: a.scores.stress,
+  }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">Mental Well-Being Monitoring</h1>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <a
-                href="/dashboard"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Back to Dashboard
-              </a>
-            </div>
+    <div className="min-h-screen bg-secondary flex flex-col">
+      <AppNav />
+
+      <main className="flex-1 max-w-7xl w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">Assessment History</h1>
+            <p className="text-sm text-muted-foreground font-light">Track your mental well-being over time</p>
+          </div>
+          <div className="flex gap-2 self-start sm:self-auto shrink-0">
+            {assessments.length >= 2 && (
+              <Link href="/compare">
+                <Button size="sm" variant="outline" className="gap-1.5">
+                  <GitCompareArrowsIcon className="w-4 h-4" />
+                  Compare
+                </Button>
+              </Link>
+            )}
+            <Link href="/questionnaire">
+              <Button size="sm" className="gap-1.5">
+                <ClipboardListIcon className="w-4 h-4" />
+                New Assessment
+              </Button>
+            </Link>
           </div>
         </div>
-      </nav>
 
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Assessment History</h2>
-          <p className="text-gray-600">Track your mental well-being over time</p>
-        </div>
+        {loading && (
+          <div className="space-y-6">
+            <Skeleton className="h-64 rounded-xl" />
+            <Skeleton className="h-80 rounded-xl" />
+          </div>
+        )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        {error && !loading && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 font-light">
             {error}
           </div>
         )}
 
-        {assessments.length === 0 ? (
-          <div className="bg-white shadow rounded-lg p-8 text-center">
-            <p className="text-gray-600 mb-4">You haven't completed any assessments yet.</p>
-            <a
-              href="/questionnaire"
-              className="inline-block px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Take Your First Assessment
-            </a>
-          </div>
-        ) : (
-          <>
-            {assessments.length > 1 && (
-              <div className="bg-white shadow rounded-lg p-6 mb-6">
-                <Line data={chartData} options={chartOptions} />
+        {!loading && assessments.length === 0 && (
+          <Card>
+            <CardContent className="pt-12 pb-12 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto">
+                <ClipboardListIcon className="w-7 h-7 text-muted-foreground" />
               </div>
-            )}
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Depression
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Anxiety
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stress
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Overall
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {assessments.map((assessment) => (
-                  <tr key={assessment.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(assessment.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {assessment.scores.depression}
-                      </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(assessment.feedback.depression.severity)}`}>
-                        {assessment.feedback.depression.title}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {assessment.scores.anxiety}
-                      </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(assessment.feedback.anxiety.severity)}`}>
-                        {assessment.feedback.anxiety.title}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {assessment.scores.stress}
-                      </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(assessment.feedback.stress.severity)}`}>
-                        {assessment.feedback.stress.title}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityColor(assessment.feedback.overall.severity)}`}>
-                        {assessment.feedback.overall.title}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <a
-                        href={`/results/${assessment.id}`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        View Details
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          </>
+              <h2 className="text-lg font-semibold text-foreground">No assessments yet</h2>
+              <p className="text-sm text-muted-foreground font-light max-w-xs mx-auto">
+                Complete your first DASS-21 assessment to start tracking your well-being.
+              </p>
+              <Link href="/questionnaire">
+                <Button className="mt-2">Take Your First Assessment</Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
 
-        <div className="mt-6">
-          <a
-            href="/questionnaire"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Take New Assessment
-          </a>
-        </div>
+        {!loading && assessments.length > 0 && (
+          <div className="space-y-6">
+            {assessments.length > 1 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-semibold">Score Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                      <YAxis domain={[0, 42]} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="Depression" stroke="#20ADA0" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Anxiety" stroke="#8BD4CD" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Stress" stroke="#166262" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">All Assessments</CardTitle>
+              </CardHeader>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/30">
+                      {['Date', 'Depression', 'Anxiety', 'Stress', 'Overall', ''].map((h) => (
+                        <th
+                          key={h}
+                          className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {assessments.map((a) => (
+                      <tr key={a.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-5 py-4 text-sm text-foreground whitespace-nowrap font-light">
+                          {new Date(a.createdAt).toLocaleDateString('en-GB', {
+                            day: 'numeric', month: 'short', year: 'numeric',
+                          })}
+                        </td>
+                        {(['depression', 'anxiety', 'stress'] as const).map((sub) => (
+                          <td key={sub} className="px-5 py-4 whitespace-nowrap">
+                            <span className="font-semibold text-foreground mr-2">{a.scores[sub]}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getBadge(a.feedback[sub].severity)}`}>
+                              {a.feedback[sub].title}
+                            </span>
+                          </td>
+                        ))}
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getBadge(a.feedback.overall.severity)}`}>
+                            {a.feedback.overall.title}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-right">
+                          <Link
+                            href={`/results/${a.id}`}
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                          >
+                            Details
+                            <ExternalLinkIcon className="w-3 h-3" />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );

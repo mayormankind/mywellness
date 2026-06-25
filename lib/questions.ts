@@ -56,27 +56,27 @@ export const questions: Question[] = [
   },
   {
     id: 'a3',
-    text: 'I found it difficult to work up the initiative to do things',
+    text: 'I experienced trembling (e.g., in the hands)',
     subscale: 'anxiety'
   },
   {
     id: 'a4',
-    text: 'I tended to over-react to situations',
+    text: 'I was worried about situations in which I might panic and make a fool of myself',
     subscale: 'anxiety'
   },
   {
     id: 'a5',
-    text: 'I felt that I was using a lot of nervous energy',
+    text: 'I felt I was close to panic',
     subscale: 'anxiety'
   },
   {
     id: 'a6',
-    text: 'I felt that I was rather touchy',
+    text: 'I was aware of the action of my heart in the absence of physical exertion (e.g., sense of heart rate increase, heart missing a beat)',
     subscale: 'anxiety'
   },
   {
     id: 'a7',
-    text: 'I found it hard to wind down',
+    text: 'I felt scared without any good reason',
     subscale: 'anxiety'
   },
   // Stress questions (S1-S7)
@@ -87,32 +87,32 @@ export const questions: Question[] = [
   },
   {
     id: 's2',
-    text: 'I was aware of dryness of my mouth',
-    subscale: 'stress'
-  },
-  {
-    id: 's3',
-    text: 'I couldn\'t seem to experience any positive feeling at all',
-    subscale: 'stress'
-  },
-  {
-    id: 's4',
-    text: 'I experienced breathing difficulty (e.g., excessively rapid breathing, breathlessness in the absence of physical exertion)',
-    subscale: 'stress'
-  },
-  {
-    id: 's5',
-    text: 'I found it difficult to work up the initiative to do things',
-    subscale: 'stress'
-  },
-  {
-    id: 's6',
     text: 'I tended to over-react to situations',
     subscale: 'stress'
   },
   {
-    id: 's7',
+    id: 's3',
     text: 'I felt that I was using a lot of nervous energy',
+    subscale: 'stress'
+  },
+  {
+    id: 's4',
+    text: 'I found myself getting agitated',
+    subscale: 'stress'
+  },
+  {
+    id: 's5',
+    text: 'I found it difficult to relax',
+    subscale: 'stress'
+  },
+  {
+    id: 's6',
+    text: 'I was intolerant of anything that kept me from getting on with what I was doing',
+    subscale: 'stress'
+  },
+  {
+    id: 's7',
+    text: 'I felt that I was rather touchy',
     subscale: 'stress'
   }
 ];

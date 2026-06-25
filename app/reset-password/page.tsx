@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { BrainIcon, ArrowLeftIcon, Loader2Icon, CheckCircleIcon, AlertCircleIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -47,29 +54,41 @@ export default function ResetPasswordPage() {
       }
 
       setSuccess(true);
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch {
+      toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const logoBlock = (
+    <div className="flex items-center justify-center gap-2 mb-8">
+      <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+        <BrainIcon className="w-5 h-5 text-white" />
+      </div>
+      <span className="font-bold text-xl text-foreground">
+        My<span className="text-primary">Wellness</span>
+      </span>
+    </div>
+  );
+
   if (!tokenValid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            <h3 className="text-lg font-medium">Invalid Reset Link</h3>
-            <p className="mt-2">{error}</p>
-            <div className="mt-4">
-              <a
-                href="/forgot-password"
-                className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                Request new reset link
-              </a>
-            </div>
-          </div>
+      <div className="min-h-screen bg-secondary flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {logoBlock}
+          <Card>
+            <CardContent className="pt-8 pb-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                <AlertCircleIcon className="w-7 h-7 text-destructive" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">Invalid Reset Link</h2>
+              <p className="text-sm text-muted-foreground font-light">{error}</p>
+              <Link href="/forgot-password">
+                <Button className="mt-2 w-full">Request New Reset Link</Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -77,75 +96,71 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-            <h3 className="text-lg font-medium">Password Reset Successful!</h3>
-            <p className="mt-2">You can now log in with your new password.</p>
-            <div className="mt-4">
-              <a
-                href="/login"
-                className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-              >
-                Proceed to Login
-              </a>
-            </div>
-          </div>
+      <div className="min-h-screen bg-secondary flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {logoBlock}
+          <Card>
+            <CardContent className="pt-8 pb-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <CheckCircleIcon className="w-7 h-7 text-primary" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">Password Reset Successful</h2>
+              <p className="text-sm text-muted-foreground font-light">
+                You can now sign in with your new password.
+              </p>
+              <Link href="/login">
+                <Button className="mt-2 w-full">Proceed to Login</Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Set new password
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your new password below
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              New Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="••••••••"
-            />
-          </div>
+    <div className="min-h-screen bg-secondary flex flex-col items-center justify-center px-4 py-12">
+      <Link
+        href="/login"
+        className="absolute top-6 left-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeftIcon className="w-4 h-4" />
+        Back to login
+      </Link>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Resetting...' : 'Reset password'}
-            </button>
-          </div>
+      <div className="w-full max-w-md">
+        {logoBlock}
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl font-bold">Set new password</CardTitle>
+            <CardDescription className="font-light">Enter your new password below</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="password">New Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-10"
+                />
+              </div>
 
-          <div className="text-center">
-            <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Back to login
-            </a>
-          </div>
-        </form>
+              <Button type="submit" disabled={loading} className="w-full h-10 mt-2">
+                {loading ? (
+                  <><Loader2Icon className="w-4 h-4 animate-spin mr-2" />Resetting…</>
+                ) : (
+                  'Reset Password'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -2,6 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { AlertTriangleIcon, AlertCircleIcon, CheckCircleIcon, ClipboardListIcon, HistoryIcon, PhoneCallIcon, XIcon, DownloadIcon } from 'lucide-react';
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+} from 'recharts';
+import { jsPDF } from 'jspdf';
+import AppNav from '@/components/app-nav';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ResultsPage() {
   const params = useParams();
@@ -9,6 +24,7 @@ export default function ResultsPage() {
   const [assessment, setAssessment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showUrgencyModal, setShowUrgencyModal] = useState(false);
 
   useEffect(() => {
     const fetchAssessment = async () => {
@@ -27,6 +43,9 @@ export default function ResultsPage() {
         }
         const data = await response.json();
         setAssessment(data);
+        if (data.feedback?.requiresProfessionalHelp) {
+          setShowUrgencyModal(true);
+        }
       } catch (err) {
         setError('An error occurred while loading the assessment');
       } finally {
@@ -37,189 +56,310 @@ export default function ResultsPage() {
     fetchAssessment();
   }, [params.id]);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'info':
-        return 'bg-blue-50 border-blue-200 text-blue-700';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-700';
-      case 'danger':
-        return 'bg-red-50 border-red-200 text-red-700';
-      default:
-        return 'bg-gray-50 border-gray-200 text-gray-700';
-    }
+  const getBadge = (severity: string) => {
+    if (severity === 'info') return 'bg-primary/10 text-primary';
+    if (severity === 'warning') return 'bg-yellow-100 text-yellow-800';
+    if (severity === 'danger') return 'bg-red-100 text-red-700';
+    return 'bg-muted text-muted-foreground';
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading your results...</p>
-        </div>
-      </div>
-    );
-  }
+  const generatePDF = () => {
+    if (!assessment) return;
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = margin;
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-          <div className="mt-4 text-center">
-            <a
-              href="/dashboard"
-              className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-            >
-              Return to Dashboard
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('DASS-21 Assessment Report', margin, y);
+    y += 15;
 
-  if (!assessment) {
-    return null;
-  }
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Completed: ${new Date(assessment.createdAt).toLocaleString('en-GB')}`, margin, y);
+    y += 10;
+
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Scores', margin, y);
+    y += 8;
+
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    subscales.forEach(({ key, label }) => {
+      pdf.text(`${label}: ${assessment.scores[key]} (${assessment.feedback[key].title})`, margin, y);
+      y += 7;
+    });
+    y += 5;
+
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Overall Feedback', margin, y);
+    y += 8;
+
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    const overallMessage = pdf.splitTextToSize(assessment.feedback.overall.message, pageWidth - margin * 2);
+    pdf.text(overallMessage, margin, y);
+    y += overallMessage.length * 5 + 5;
+
+    if (assessment.feedback.overall.recommendations?.length > 0) {
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Recommendations:', margin, y);
+      y += 6;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      assessment.feedback.overall.recommendations.forEach((rec: string) => {
+        const recText = pdf.splitTextToSize(`• ${rec}`, pageWidth - margin * 2);
+        pdf.text(recText, margin, y);
+        y += recText.length * 5 + 3;
+      });
+    }
+
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text('Generated by MyWellness - FUTA Student Mental Well-being Platform', margin, pdf.internal.pageSize.getHeight() - 15);
+
+    pdf.save(`assessment-${assessment.id}.pdf`);
+  };
+
+  const subscales = [
+    { key: 'depression' as const, label: 'Depression' },
+    { key: 'anxiety' as const, label: 'Anxiety' },
+    { key: 'stress' as const, label: 'Stress' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">Mental Well-Being Monitoring</h1>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <a
-                href="/dashboard"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Back to Dashboard
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-secondary flex flex-col">
+      <AppNav />
 
-      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Assessment Results</h2>
-          <p className="text-gray-600">
-            Completed on {new Date(assessment.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-
-        {assessment.feedback.requiresProfessionalHelp && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            <h3 className="text-lg font-medium">⚠️ Professional Support Recommended</h3>
-            <p className="mt-2">Your assessment indicates significant symptoms. Please consider reaching out to a mental health professional.</p>
+      <main className="flex-1 max-w-3xl w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        {loading && (
+          <div className="space-y-6">
+            <Skeleton className="h-10 w-48" />
+            <div className="grid grid-cols-3 gap-4">
+              {[0,1,2].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
+            </div>
+            <Skeleton className="h-40 rounded-xl" />
+            {[0,1,2].map(i => <Skeleton key={i} className="h-36 rounded-xl" />)}
           </div>
         )}
 
-        <div className="bg-white shadow rounded-lg mb-6">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Overall Assessment</h3>
-            <div className={`border rounded-lg p-4 ${getSeverityColor(assessment.feedback.overall.severity)}`}>
-              <h4 className="text-xl font-semibold mb-2">{assessment.feedback.overall.title}</h4>
-              <p className="mb-4">{assessment.feedback.overall.message}</p>
-              <div>
-                <h5 className="font-medium mb-2">Recommendations:</h5>
-                <ul className="list-disc list-inside space-y-1">
-                  {assessment.feedback.overall.recommendations.map((rec: string, idx: number) => (
-                    <li key={idx}>{rec}</li>
-                  ))}
-                </ul>
+        {error && !loading && (
+          <Card>
+            <CardContent className="pt-8 pb-8 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                <AlertCircleIcon className="w-7 h-7 text-destructive" />
               </div>
-            </div>
-          </div>
-        </div>
+              <p className="text-sm text-muted-foreground font-light">{error}</p>
+              <Link href="/dashboard"><Button>Back to Dashboard</Button></Link>
+            </CardContent>
+          </Card>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Depression</h3>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">
-                {assessment.scores.depression}
-              </div>
-              <div className={`text-sm font-medium mb-3 px-2 py-1 rounded ${getSeverityColor(assessment.feedback.depression.severity)}`}>
-                {assessment.feedback.depression.title}
-              </div>
-              <p className="text-sm text-gray-600 mb-3">{assessment.feedback.depression.message}</p>
-              <div>
-                <h5 className="text-sm font-medium mb-1">Recommendations:</h5>
-                <ul className="text-xs list-disc list-inside space-y-1">
-                  {assessment.feedback.depression.recommendations.map((rec: string, idx: number) => (
-                    <li key={idx}>{rec}</li>
-                  ))}
-                </ul>
-              </div>
+        {assessment && !loading && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">Assessment Results</h1>
+              <p className="text-sm text-muted-foreground font-light">
+                Completed on{' '}
+                {new Date(assessment.createdAt).toLocaleDateString('en-GB', {
+                  day: 'numeric', month: 'long', year: 'numeric',
+                  hour: '2-digit', minute: '2-digit',
+                })}
+              </p>
             </div>
-          </div>
 
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Anxiety</h3>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">
-                {assessment.scores.anxiety}
+            {assessment.feedback.requiresProfessionalHelp && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-5 mb-6 flex flex-col md:flex-row md:items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                  <AlertTriangleIcon className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-red-700 mb-1">Professional Support Recommended</p>
+                  <p className="text-sm text-red-600 font-light leading-relaxed">
+                    Your scores suggest elevated distress. Please reach out to{' '}
+                    <strong>FUTA&apos;s Counselling Unit</strong> or a mental health professional. You are not alone.
+                  </p>
+                  <p className="text-xs text-red-500 mt-2 font-medium">Suicide Prevention Lifeline: 0800-800-2000</p>
+                </div>
               </div>
-              <div className={`text-sm font-medium mb-3 px-2 py-1 rounded ${getSeverityColor(assessment.feedback.anxiety.severity)}`}>
-                {assessment.feedback.anxiety.title}
-              </div>
-              <p className="text-sm text-gray-600 mb-3">{assessment.feedback.anxiety.message}</p>
-              <div>
-                <h5 className="text-sm font-medium mb-1">Recommendations:</h5>
-                <ul className="text-xs list-disc list-inside space-y-1">
-                  {assessment.feedback.anxiety.recommendations.map((rec: string, idx: number) => (
-                    <li key={idx}>{rec}</li>
-                  ))}
-                </ul>
-              </div>
+            )}
+
+            {/* Score summary */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              {subscales.map(({ key, label }) => (
+                <Card key={key} className="text-center">
+                  <CardContent className="pt-6 pb-5">
+                    <p className="text-xs text-muted-foreground font-light mb-2">{label}</p>
+                    <p className="text-4xl font-bold text-foreground mb-3">{assessment.scores[key]}</p>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getBadge(assessment.feedback[key].severity)}`}>
+                      {assessment.feedback[key].title}
+                    </span>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </div>
 
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Stress</h3>
-              <div className="text-3xl font-bold text-indigo-600 mb-2">
-                {assessment.scores.stress}
-              </div>
-              <div className={`text-sm font-medium mb-3 px-2 py-1 rounded ${getSeverityColor(assessment.feedback.stress.severity)}`}>
-                {assessment.feedback.stress.title}
-              </div>
-              <p className="text-sm text-gray-600 mb-3">{assessment.feedback.stress.message}</p>
-              <div>
-                <h5 className="text-sm font-medium mb-1">Recommendations:</h5>
-                <ul className="text-xs list-disc list-inside space-y-1">
-                  {assessment.feedback.stress.recommendations.map((rec: string, idx: number) => (
-                    <li key={idx}>{rec}</li>
-                  ))}
-                </ul>
-              </div>
+            {/* Radar chart */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">Score Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <RadarChart data={[
+                    { subject: 'Depression', value: assessment.scores.depression, fullMark: 42 },
+                    { subject: 'Anxiety', value: assessment.scores.anxiety, fullMark: 42 },
+                    { subject: 'Stress', value: assessment.scores.stress, fullMark: 42 },
+                  ]}>
+                    <PolarGrid stroke="rgba(0,0,0,0.04)" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
+                    <PolarRadiusAxis angle={90} domain={[0, 42]} tick={{ fontSize: 10 }} />
+                    <Radar
+                      name="Scores"
+                      dataKey="value"
+                      stroke="#20ADA0"
+                      fill="#20ADA0"
+                      fillOpacity={0.2}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Overall feedback */}
+            <Card className="mb-5">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <CheckCircleIcon className="w-4 h-4 text-primary" />
+                  </div>
+                  <CardTitle className="text-base">Overall Feedback</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground font-light leading-relaxed">
+                  {assessment.feedback.overall.message}
+                </p>
+                {assessment.feedback.overall.recommendations?.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {assessment.feedback.overall.recommendations.map((rec: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground font-light">
+                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                        {rec}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Subscale cards */}
+            {subscales.map(({ key, label }) => (
+              <Card key={key} className="mb-5">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">{label}</CardTitle>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getBadge(assessment.feedback[key].severity)}`}>
+                      {assessment.feedback[key].title}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground font-light leading-relaxed">
+                    {assessment.feedback[key].message}
+                  </p>
+                  {assessment.feedback[key].recommendations?.length > 0 && (
+                    <ul className="space-y-1.5">
+                      {assessment.feedback[key].recommendations.map((rec: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground font-light">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <Link href="/questionnaire">
+                <Button className="gap-2 w-full sm:w-auto">
+                  <ClipboardListIcon className="w-4 h-4" />
+                  Take New Assessment
+                </Button>
+              </Link>
+              <Link href="/history">
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
+                  <HistoryIcon className="w-4 h-4" />
+                  View History
+                </Button>
+              </Link>
+              <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={generatePDF}>
+                <DownloadIcon className="w-4 h-4" />
+                Download PDF
+              </Button>
             </div>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <a
-            href="/history"
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
-          >
-            View your assessment history
-          </a>
-          <a
-            href="/questionnaire"
-            className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Take New Assessment
-          </a>
-        </div>
+          </>
+        )}
       </main>
+
+      {showUrgencyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-background rounded-2xl shadow-2xl w-full max-w-sm p-6 relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowUrgencyModal(false)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Close"
+            >
+              <XIcon className="w-5 h-5" />
+            </button>
+
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangleIcon className="w-7 h-7 text-red-600" />
+              </div>
+
+              <div>
+                <h2 className="text-lg font-bold text-foreground mb-1">Professional Support Recommended</h2>
+                <p className="text-sm text-muted-foreground font-light leading-relaxed">
+                  Your results suggest elevated distress. Please reach out — you don&apos;t have to face this alone.
+                </p>
+              </div>
+
+              <div className="w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 space-y-1">
+                <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">Suicide Prevention Lifeline</p>
+                <p className="text-xl font-bold text-red-700 tracking-widest">0800-800-2000</p>
+                <p className="text-xs text-red-500 font-light">Toll-free · Available 24/7</p>
+              </div>
+
+              <a href="tel:08008002000" className="w-full">
+                <Button className="w-full gap-2 bg-red-600 hover:bg-red-700 text-white">
+                  <PhoneCallIcon className="w-4 h-4" />
+                  Call Now
+                </Button>
+              </a>
+
+              <div className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-left space-y-1">
+                <p className="text-xs font-semibold text-foreground">FUTA Counselling Unit</p>
+                <p className="text-xs text-muted-foreground font-light">Visit the Student Affairs building or contact your faculty advisor.</p>
+              </div>
+
+              <button
+                onClick={() => setShowUrgencyModal(false)}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+              >
+                I&apos;ll read the full results first
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

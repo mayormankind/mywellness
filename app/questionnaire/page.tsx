@@ -2,24 +2,37 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { questions, getQuestionsBySubscale, Subscale } from '@/lib/questions';
+import { toast } from 'sonner';
+import { Loader2Icon } from 'lucide-react';
+import { getQuestionsBySubscale, Subscale } from '@/lib/questions';
+import AppNav from '@/components/app-nav';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+const SCALE_LABELS = [
+  'Did not apply to me at all',
+  'Applied to me to some degree',
+  'Applied to a considerable degree',
+  'Applied very much, or most of the time',
+];
 
 export default function QuestionnairePage() {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const answeredCount = Object.keys(answers).length;
+  const progress = Math.round((answeredCount / 21) * 100);
+
   const handleAnswerChange = (questionId: string, value: number) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
-    if (Object.keys(answers).length !== 21) {
-      setError('Please answer all 21 questions before submitting.');
+    if (answeredCount !== 21) {
+      toast.error('Please answer all 21 questions before submitting.');
       return;
     }
 
@@ -35,37 +48,46 @@ export default function QuestionnairePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Submission failed');
+        toast.error(data.error || 'Submission failed');
         return;
       }
 
       router.push(`/results/${data.id}`);
-    } catch (err) {
-      setError('An error occurred. Please try again.');
+    } catch {
+      toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderQuestionGroup = (subscale: Subscale, title: string) => {
-    const subscaleQuestions = getQuestionsBySubscale(subscale);
-    
+  const renderGroup = (subscale: Subscale, title: string, color: string) => {
+    const qs = getQuestionsBySubscale(subscale);
     return (
-      <div key={subscale} className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">{title}</h3>
-        <div className="space-y-6">
-          {subscaleQuestions.map((question) => (
-            <div key={question.id} className="bg-white p-4 rounded-lg shadow-sm">
-              <p className="text-gray-700 mb-3">{question.text}</p>
-              <div className="flex flex-wrap gap-2">
+      <div key={subscale} className="mb-10">
+        <div className="flex items-center gap-3 mb-5">
+          <div className={`w-3 h-3 rounded-full ${color}`} />
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          <span className="text-xs text-muted-foreground font-light">
+            ({qs.filter((q) => answers[q.id] !== undefined).length}/{qs.length} answered)
+          </span>
+        </div>
+        <div className="space-y-4">
+          {qs.map((question, idx) => (
+            <div key={question.id} className="bg-white rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-foreground mb-4">
+                <span className="text-primary font-semibold mr-2">{idx + 1}.</span>
+                {question.text}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 {[0, 1, 2, 3].map((value) => (
                   <label
                     key={value}
-                    className={`flex-1 min-w-[100px] cursor-pointer ${
+                    className={cn(
+                      'cursor-pointer rounded-lg border p-3 text-center text-xs font-medium transition-colors',
                       answers[question.id] === value
-                        ? 'bg-indigo-100 border-indigo-500'
-                        : 'bg-gray-50 border-gray-300'
-                    } border rounded-md p-3 text-center transition-colors hover:bg-indigo-50`}
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-secondary text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                    )}
                   >
                     <input
                       type="radio"
@@ -75,12 +97,8 @@ export default function QuestionnairePage() {
                       onChange={() => handleAnswerChange(question.id, value)}
                       className="sr-only"
                     />
-                    <span className="block text-sm font-medium text-gray-900">
-                      {value === 0 && 'Did not apply to me at all'}
-                      {value === 1 && 'Applied to me to some degree, or some of the time'}
-                      {value === 2 && 'Applied to me to a considerable degree, or a good part of the time'}
-                      {value === 3 && 'Applied to me very much, or most of the time'}
-                    </span>
+                    <span className="block font-bold text-lg mb-1">{value}</span>
+                    {SCALE_LABELS[value]}
                   </label>
                 ))}
               </div>
@@ -92,58 +110,54 @@ export default function QuestionnairePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">Mental Well-Being Monitoring</h1>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <a
-                href="/dashboard"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Back to Dashboard
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-secondary flex flex-col">
+      <AppNav />
 
-      <main className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 max-w-3xl w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">DASS-21 Assessment</h2>
-          <p className="text-gray-600">
-            Please read each statement and circle a number 0, 1, 2, or 3 which indicates how much the statement applied to you over the past week.
-            There are no right or wrong answers. Do not spend too much time on any statement.
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">DASS-21 Assessment</h1>
+          <p className="text-muted-foreground font-light text-sm max-w-xl">
+            Rate each statement based on how much it applied to you <strong className="text-foreground">over the past week</strong>. There are no right or wrong answers.
           </p>
         </div>
 
+        {/* Progress bar */}
+        <div className="bg-white rounded-xl border border-border p-4 mb-8 flex items-center gap-4">
+          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className="text-sm font-medium text-foreground shrink-0">
+            {answeredCount} / 21
+          </span>
+        </div>
+
         <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-              {error}
-            </div>
-          )}
+          {renderGroup('depression', 'Depression', 'bg-primary')}
+          {renderGroup('anxiety', 'Anxiety', 'bg-chart-2')}
+          {renderGroup('stress', 'Stress', 'bg-chart-3')}
 
-          {renderQuestionGroup('depression', 'Depression')}
-          {renderQuestionGroup('anxiety', 'Anxiety')}
-          {renderQuestionGroup('stress', 'Stress')}
-
-          <div className="mt-8 flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Answered: {Object.keys(answers).length} / 21 questions
+          <div className="sticky bottom-4 mt-6">
+            <div className="bg-white border border-border rounded-xl p-4 flex items-center justify-between shadow-sm">
+              <p className="text-sm text-muted-foreground font-light">
+                {21 - answeredCount > 0
+                  ? `${21 - answeredCount} question${21 - answeredCount === 1 ? '' : 's'} remaining`
+                  : 'All questions answered — ready to submit!'}
+              </p>
+              <Button
+                type="submit"
+                disabled={loading || answeredCount !== 21}
+                className="gap-2"
+              >
+                {loading ? (
+                  <><Loader2Icon className="w-4 h-4 animate-spin" />Submitting…</>
+                ) : (
+                  'Submit Assessment'
+                )}
+              </Button>
             </div>
-            <button
-              type="submit"
-              disabled={loading || Object.keys(answers).length !== 21}
-              className="px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Submitting...' : 'Submit Assessment'}
-            </button>
           </div>
         </form>
       </main>

@@ -1,27 +1,31 @@
 import Link from 'next/link';
+import { BrainIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full text-center">
-        <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Page Not Found</h2>
-        <p className="text-gray-600 mb-8">
-          Sorry, we couldn't find the page you're looking for.
+    <div className="min-h-screen bg-secondary flex flex-col items-center justify-center px-4 py-12">
+      <div className="flex items-center gap-2 mb-10">
+        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          <BrainIcon className="w-4 h-4 text-white" />
+        </div>
+        <span className="font-bold text-lg text-foreground">
+          My<span className="text-primary">Wellness</span>
+        </span>
+      </div>
+
+      <div className="max-w-md w-full text-center space-y-5">
+        <p className="text-8xl font-bold text-primary">404</p>
+        <h1 className="text-2xl font-bold text-foreground">Page Not Found</h1>
+        <p className="text-sm text-muted-foreground font-light leading-relaxed">
+          Sorry, we couldn&apos;t find the page you&apos;re looking for. It may have been moved or doesn&apos;t exist.
         </p>
-        <div className="space-y-4">
-          <Link
-            href="/dashboard"
-            className="inline-block px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            Go to Dashboard
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/dashboard">
+            <Button className="w-full sm:w-auto">Go to Dashboard</Button>
           </Link>
-          <br />
-          <Link
-            href="/"
-            className="inline-block text-indigo-600 hover:text-indigo-500"
-          >
-            Return to Home
+          <Link href="/">
+            <Button variant="outline" className="w-full sm:w-auto">Return to Home</Button>
           </Link>
         </div>
       </div>
