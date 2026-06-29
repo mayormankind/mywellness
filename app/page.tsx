@@ -190,18 +190,30 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.62, ease: EASE }}
               >
-                <Link href="/register">
-                  <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                    <Button className="h-12 px-8 text-base w-full sm:w-auto gap-2">
-                      Start Free Assessment <ArrowRightIcon className="w-4 h-4" />
-                    </Button>
-                  </motion.div>
-                </Link>
-                <Link href="/login">
-                  <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                    <Button variant="outline" className="h-12 px-8 text-base w-full sm:w-auto">Sign In</Button>
-                  </motion.div>
-                </Link>
+                {isLoggedIn ? (
+                  <Link href="/dashboard">
+                    <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                      <Button className="h-12 px-8 text-base w-full sm:w-auto gap-2">
+                        Go to Dashboard <ArrowRightIcon className="w-4 h-4" />
+                      </Button>
+                    </motion.div>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/register">
+                      <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                        <Button className="h-12 px-8 text-base w-full sm:w-auto gap-2">
+                          Start Free Assessment <ArrowRightIcon className="w-4 h-4" />
+                        </Button>
+                      </motion.div>
+                    </Link>
+                    <Link href="/login">
+                      <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                        <Button variant="outline" className="h-12 px-8 text-base w-full sm:w-auto">Sign In</Button>
+                      </motion.div>
+                    </Link>
+                  </>
+                )}
               </motion.div>
 
               <motion.div

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyJwt, getAuthToken, hashPassword } from '@/lib/auth';
+import { verifyJwt, getAuthToken, hashPassword, clearAuthCookie } from '@/lib/auth';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
@@ -106,5 +106,38 @@ export async function PATCH(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = await getAuthToken();
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const payload = await verifyJwt(token);
+    if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+
+    const { password } = await request.json();
+    if (!password) {
+      return NextResponse.json({ error: 'Password is required to delete your account' }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    const { verifyPassword } = await import('@/lib/auth');
+    const isValid = await verifyPassword(password, user.passwordHash);
+    if (!isValid) {
+      return NextResponse.json({ error: 'Incorrect password' }, { status: 400 });
+    }
+
+    await prisma.assessment.deleteMany({ where: { userId: payload.userId } });
+    await prisma.user.delete({ where: { id: payload.userId } });
+    await clearAuthCookie();
+
+    return NextResponse.json({ message: 'Account deleted' }, { status: 200 });
+  } catch (error) {
+    console.error('Account deletion error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

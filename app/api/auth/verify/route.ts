@@ -28,7 +28,9 @@ export async function GET(request: NextRequest) {
         id: true,
         fullName: true,
         email: true,
+        matricNumber: true,
         isVerified: true,
+        createdAt: true,
       }
     });
 
