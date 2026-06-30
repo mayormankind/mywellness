@@ -85,7 +85,7 @@ This layer handles:
 1. **Presentation Layer:** User fills out registration form on `/register/page.tsx`
 2. **Application Layer:** Form data sent to `POST /api/auth/register`
    - Validates input using Zod schemas (`lib/validation.ts`)
-   - Checks uniqueness (email, matric number)
+   - Checks uniqueness (email)
    - Hashes password using bcrypt (`lib/auth.ts`)
    - Creates user record via Prisma
    - Generates verification token

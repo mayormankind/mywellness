@@ -4,7 +4,7 @@ import { verifyJwt, getAuthToken, hashPassword, clearAuthCookie } from '@/lib/au
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
-  fullName: z.string().min(2).max(100).optional(),
+  userName: z.string().min(2).max(100).optional(),
   email: z.string().email().optional(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(6).optional(),
@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { fullName, email, currentPassword, newPassword } = validation.data;
+    const { userName, email, currentPassword, newPassword } = validation.data;
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
     });
@@ -50,8 +50,8 @@ export async function PATCH(request: NextRequest) {
 
     const updateData: any = {};
 
-    if (fullName) {
-      updateData.fullName = fullName;
+    if (userName) {
+      updateData.userName = userName;
     }
 
     if (email && email !== user.email) {
@@ -92,9 +92,8 @@ export async function PATCH(request: NextRequest) {
       data: updateData,
       select: {
         id: true,
-        fullName: true,
+        userName: true,
         email: true,
-        matricNumber: true,
         isVerified: true,
       },
     });

@@ -76,7 +76,7 @@ export default function Home() {
   ];
 
   const steps = [
-    { step: '01', title: 'Create Your Account',   desc: 'Register with your FUTA student email and matric number. Verify your email to activate your account.' },
+    { step: '01', title: 'Create Your Account',   desc: 'Register with your FUTA student email and a unique username. Verify your email to activate your account.' },
     { step: '02', title: 'Take the Assessment',   desc: 'Answer 21 short questions about how you have felt over the past week. No right or wrong answers — be honest.' },
     { step: '03', title: 'Get Your Results',      desc: 'Receive instant, personalised feedback with severity classifications and self-care recommendations.' },
   ];

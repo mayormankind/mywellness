@@ -145,7 +145,7 @@ async function generatePDF(stats: OverviewStats, dateFrom: string, dateTo: strin
   doc.setFontSize(8);
   const ethics = [
     'This report contains anonymized aggregate data only. No individual student',
-    'identifiers (names, email addresses, or matric numbers) are included.',
+    'identifiers (names, email addresses, or usernames) are included.',
     'Data was collected under informed consent in accordance with research',
     'ethics guidelines. All participant IDs are system-generated anonymous codes.',
     'This document is intended for authorized research personnel only.',
@@ -314,7 +314,7 @@ export default function AdminReportsPage() {
                   </div>
                 ))}
                 <p className="mt-3 text-slate-500 text-[10px]">
-                  ⓘ No individual student names, emails, or matric numbers are included.
+                  ⓘ No individual student names, emails, or usernames are included.
                   All data is anonymized per research ethics guidelines.
                 </p>
               </div>

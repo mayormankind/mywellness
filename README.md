@@ -88,7 +88,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Registration
 
 1. Navigate to `/register`
-2. Fill in your full name, matric number, email, and password
+2. Fill in your username, email, and password
 3. Check your email for verification link
 4. Click the verification link to activate your account
 

@@ -26,9 +26,8 @@ export async function GET(request: NextRequest) {
       where: { id: payload.userId },
       select: {
         id: true,
-        fullName: true,
+        userName: true,
         email: true,
-        matricNumber: true,
         isVerified: true,
         createdAt: true,
       }

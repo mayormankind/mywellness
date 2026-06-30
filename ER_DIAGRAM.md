@@ -7,8 +7,7 @@
 │                            User                                │
 ├─────────────────────────────────────────────────────────────────┤
 │ PK  id              String (UUID)                              │
-│    fullName        String                                      │
-│ UK  matricNumber    String                                      │
+│    userName        String                                      │
 │ UK  email           String                                      │
 │    passwordHash    String                                      │
 │    isVerified      Boolean (default: false)                    │
@@ -48,8 +47,7 @@
 
 ### User Table
 - `id`: Primary key, UUID auto-generated
-- `fullName`: User's full name
-- `matricNumber`: Unique matric number for FUTA students
+- `userName`: User's unique username (for anonymous identity)
 - `email`: Unique email address for authentication
 - `passwordHash`: Bcrypt hashed password
 - `isVerified`: Email verification status
@@ -82,5 +80,4 @@ All severity fields use the following enum:
 ## Indexes
 
 - User.email (unique)
-- User.matricNumber (unique)
 - Assessment.userId (foreign key index)

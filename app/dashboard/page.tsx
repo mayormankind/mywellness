@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ fullName: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ userName: string; email: string } | null>(null);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
-      <AppNav userName={user?.fullName} />
+      <AppNav userName={user?.userName} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
         {/* Greeting */}
@@ -138,7 +138,7 @@ export default function DashboardPage() {
           ) : (
             <>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
-                Welcome back, {user?.fullName?.split(' ')[0] ?? 'Student'} 👋
+                Welcome back, {user?.userName?.split(' ')[0] ?? 'Student'} 👋
               </h1>
               <p className="text-muted-foreground font-light">
                 How are you feeling today? Take a moment to check in with yourself.

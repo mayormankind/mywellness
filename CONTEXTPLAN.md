@@ -83,8 +83,7 @@ ARCHITECTURE.md
 ```prisma
 model User {
   id            String       @id @default(uuid())
-  fullName      String
-  matricNumber  String       @unique
+  userName      String
   email         String       @unique
   passwordHash  String
   isVerified    Boolean      @default(false)
@@ -135,7 +134,7 @@ Use **DASS-21** (Depression Anxiety Stress Scale, 21 items, 7 per subscale, each
 ### Phase 1 — Custom Auth & Email
 1. `lib/auth.ts`: `hashPassword`, `verifyPassword` (bcryptjs), `signJwt`, `verifyJwt` (jsonwebtoken, 2-hour expiry), `setAuthCookie`/`clearAuthCookie` helpers (HttpOnly, Secure in production, SameSite=Lax).
 2. `lib/mailer.ts`: Nodemailer transport from env vars; two templates — verification email (link with token) and password reset email (link with token).
-3. `POST /api/auth/register`: validate via Zod, check uniqueness (email + matric number), hash password, create unverified user, generate verify token, send verification email.
+3. `POST /api/auth/register`: validate via Zod, check uniqueness (email), hash password, create unverified user, generate verify token, send verification email.
 4. `GET /api/auth/verify-email?token=...`: look up user by token, mark `isVerified=true`, clear token.
 5. `POST /api/auth/login`: verify credentials, reject if not verified, issue JWT cookie.
 6. `POST /api/auth/logout`: clear cookie.

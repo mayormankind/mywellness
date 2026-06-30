@@ -17,9 +17,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type User = {
   id: string;
-  fullName: string;
+  userName: string;
   email: string;
-  matricNumber: string;
   isVerified: boolean;
   createdAt: string;
 };
@@ -63,7 +62,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('profile');
 
-  const [profileForm, setProfileForm] = useState({ fullName: '', email: '' });
+  const [profileForm, setProfileForm] = useState({ userName: '', email: '' });
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [securityForm, setSecurityForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -79,7 +78,7 @@ export default function SettingsPage() {
         if (!r.ok) { router.push('/login'); return; }
         const data = await r.json();
         setUser(data.user);
-        setProfileForm({ fullName: data.user.fullName, email: data.user.email });
+        setProfileForm({ userName: data.user.userName, email: data.user.email });
       })
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
@@ -92,7 +91,7 @@ export default function SettingsPage() {
       const res = await fetch('/api/user', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName: profileForm.fullName, email: profileForm.email }),
+        body: JSON.stringify({ userName: profileForm.userName, email: profileForm.email }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || 'Failed to update profile'); return; }
@@ -152,7 +151,7 @@ export default function SettingsPage() {
     }
   };
 
-  const initials = user?.fullName
+  const initials = user?.userName
     .split(' ')
     .map((n) => n[0])
     .slice(0, 2)
@@ -171,7 +170,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
-      <AppNav userName={user?.fullName} />
+      <AppNav userName={user?.userName} />
 
       <main className="flex-1 max-w-2xl w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
 
@@ -197,7 +196,7 @@ export default function SettingsPage() {
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-semibold text-foreground truncate">{user.fullName}</p>
+                    <p className="text-base font-semibold text-foreground truncate">{user.userName}</p>
                     <p className="text-sm text-muted-foreground font-light truncate">{user.email}</p>
                     <div className="flex flex-wrap items-center gap-3 mt-2">
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${user.isVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
@@ -207,10 +206,6 @@ export default function SettingsPage() {
                       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-light">
                         <CalendarIcon className="w-3 h-3" />
                         Member since {memberSince}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-light">
-                        <HashIcon className="w-3 h-3" />
-                        {user.matricNumber}
                       </span>
                     </div>
                   </div>
@@ -246,13 +241,13 @@ export default function SettingsPage() {
                 <CardContent>
                   <form onSubmit={handleProfileSave} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="userName">Username</Label>
                       <div className="relative">
                         <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                          id="fullName"
-                          value={profileForm.fullName}
-                          onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                          id="userName"
+                          value={profileForm.userName}
+                          onChange={(e) => setProfileForm({ ...profileForm, userName: e.target.value })}
                           className="pl-10"
                           required
                           minLength={2}
@@ -278,19 +273,6 @@ export default function SettingsPage() {
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="matricNumber">Matric Number</Label>
-                      <div className="relative">
-                        <HashIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="matricNumber"
-                          value={user.matricNumber}
-                          disabled
-                          className="pl-10 bg-muted cursor-not-allowed"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground font-light">Matric number cannot be changed</p>
-                    </div>
 
                     <Button type="submit" disabled={savingProfile} className="w-full gap-2">
                       {savingProfile ? <Loader2Icon className="w-4 h-4 animate-spin" /> : <SaveIcon className="w-4 h-4" />}
