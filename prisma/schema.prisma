@@ -3,9 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  shadowDatabaseUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -14,6 +14,7 @@ model User {
   email         String       @unique
   passwordHash  String
   isVerified    Boolean      @default(false)
+  role          String       @default("student")
   verifyToken   String?
   resetToken    String?
   resetTokenExp DateTime?

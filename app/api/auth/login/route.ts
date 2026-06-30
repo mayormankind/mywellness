@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     const token = await signJwt({
       userId: user.id,
       email: user.email,
+      role: user.role,
     });
 
     await setAuthCookie(token);

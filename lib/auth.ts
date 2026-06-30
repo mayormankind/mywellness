@@ -10,6 +10,7 @@ const JWT_EXPIRY = '2h';
 export interface AuthPayload {
   userId: string;
   email: string;
+  role?: string;
   [key: string]: unknown;
 }
 
