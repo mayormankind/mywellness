@@ -1,0 +1,9 @@
+DATABASE_URL=postgresql://postgres.hdzjbfojldqhdzgojzdf:hHQM5oTseZCnVmHp@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
+DIRECT_URL="postgresql://postgres.hdzjbfojldqhdzgojzdf:hHQM5oTseZCnVmHp@aws-1-eu-north-1.pooler.supabase.com:5432/postgres"
+JWT_SECRET=ahdjhajsfhjhsjfhj63t63hsf_87466sf4
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER=mayowamakinde23@gmail.com
+SMTP_PASS=xykpwagwxgwxmsqt
+EMAIL_FROM="noreply@mywellness.com"
+APP_URL="http://localhost:3000"

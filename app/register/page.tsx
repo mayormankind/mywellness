@@ -11,8 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    fullName: '',
-    matricNumber: '',
+    userName: '',
     email: '',
     password: '',
   });
@@ -107,19 +106,19 @@ export default function RegisterPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="userName">Full Name</Label>
                 <Input
-                  id="fullName"
+                  id="userName"
                   type="text"
                   placeholder="John Doe"
                   required
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  value={formData.userName}
+                  onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
                   className="h-10"
                 />
               </div>
 
-              <div className="space-y-1.5">
+              {/* <div className="space-y-1.5">
                 <Label htmlFor="matricNumber">Matric Number</Label>
                 <Input
                   id="matricNumber"
@@ -130,7 +129,7 @@ export default function RegisterPage() {
                   onChange={(e) => setFormData({ ...formData, matricNumber: e.target.value })}
                   className="h-10"
                 />
-              </div>
+              </div> */}
 
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email address</Label>

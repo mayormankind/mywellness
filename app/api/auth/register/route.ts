@@ -17,13 +17,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { fullName, matricNumber, email, password } = validation.data;
+    const { userName, email, password } = validation.data;
 
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
           { email },
-          { matricNumber }
         ]
       }
     });
@@ -35,12 +34,6 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         );
       }
-      if (existingUser.matricNumber === matricNumber) {
-        return NextResponse.json(
-          { error: 'Matric number already registered' },
-          { status: 409 }
-        );
-      }
     }
 
     const passwordHash = await hashPassword(password);
@@ -48,8 +41,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        fullName,
-        matricNumber,
+        userName,
         email,
         passwordHash,
         verifyToken,

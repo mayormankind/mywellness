@@ -117,7 +117,7 @@ export default function QuestionnairePage() {
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">DASS-21 Assessment</h1>
           <p className="text-muted-foreground font-light text-sm max-w-xl">
-            Rate each statement based on how much it applied to you <strong className="text-foreground">over the past week</strong>. There are no right or wrong answers.
+            Please rate each statement based on how much it applies to you currently. <strong className="text-foreground">over the past week</strong>. There are no right or wrong answers.
           </p>
         </div>
 
