@@ -24,7 +24,6 @@ export default function ResultsPage() {
   const [assessment, setAssessment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showUrgencyModal, setShowUrgencyModal] = useState(false);
 
   useEffect(() => {
     const fetchAssessment = async () => {
@@ -43,9 +42,6 @@ export default function ResultsPage() {
         }
         const data = await response.json();
         setAssessment(data);
-        if (data.feedback?.requiresProfessionalHelp) {
-          setShowUrgencyModal(true);
-        }
       } catch (err) {
         setError('An error occurred while loading the assessment');
       } finally {
@@ -308,58 +304,6 @@ export default function ResultsPage() {
           </>
         )}
       </main>
-
-      {showUrgencyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-background rounded-2xl shadow-2xl w-full max-w-sm p-6 relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setShowUrgencyModal(false)}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Close"
-            >
-              <XIcon className="w-5 h-5" />
-            </button>
-
-            <div className="flex flex-col items-center text-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertTriangleIcon className="w-7 h-7 text-red-600" />
-              </div>
-
-              <div>
-                <h2 className="text-lg font-bold text-foreground mb-1">Professional Support Recommended</h2>
-                <p className="text-sm text-muted-foreground font-light leading-relaxed">
-                  Your results suggest elevated distress. Please reach out — you don&apos;t have to face this alone.
-                </p>
-              </div>
-
-              <div className="w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 space-y-1">
-                <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">Suicide Prevention Lifeline</p>
-                <p className="text-xl font-bold text-red-700 tracking-widest">0800-800-2000</p>
-                <p className="text-xs text-red-500 font-light">Toll-free · Available 24/7</p>
-              </div>
-
-              <a href="tel:08008002000" className="w-full">
-                <Button className="w-full gap-2 bg-red-600 hover:bg-red-700 text-white">
-                  <PhoneCallIcon className="w-4 h-4" />
-                  Call Now
-                </Button>
-              </a>
-
-              <div className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-left space-y-1">
-                <p className="text-xs font-semibold text-foreground">FUTA Counselling Unit</p>
-                <p className="text-xs text-muted-foreground font-light">Visit the Student Affairs building or contact your faculty advisor.</p>
-              </div>
-
-              <button
-                onClick={() => setShowUrgencyModal(false)}
-                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-              >
-                I&apos;ll read the full results first
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
