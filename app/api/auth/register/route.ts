@@ -4,8 +4,20 @@ import { hashPassword } from '@/lib/auth';
 import { sendEmail, generateVerificationEmail } from '@/lib/mailer';
 import { registerSchema } from '@/lib/validation';
 import { randomBytes } from 'crypto';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  // Rate limiting: 3 requests per hour per IP
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimitResult = rateLimit(`register:${ip}`, 3, 60 * 60 * 1000);
+
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many registration attempts. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     

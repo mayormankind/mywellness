@@ -12,24 +12,37 @@ import {
   TrendingUpIcon,
   TrendingDownIcon,
   MinusIcon,
+  CalendarIcon,
+  BarChart3Icon,
 } from 'lucide-react';
 import AppNav from '@/components/app-nav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<{ userName: string; email: string } | null>(null);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all');
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const [authRes, assessmentsRes] = await Promise.all([
-          fetch('/api/auth/verify'),
-          fetch('/api/assessments'),
+          fetch('/api/auth/verify', { credentials: 'include' }),
+          fetch('/api/assessments', { credentials: 'include' }),
         ]);
         if (!authRes.ok) {
           router.push('/login');
@@ -100,6 +113,34 @@ export default function DashboardPage() {
     return 'Your scores have remained relatively stable over recent assessments.';
   };
 
+  const getFilteredAssessments = () => {
+    const now = new Date();
+    if (timeFilter === 'week') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return assessments.filter(a => new Date(a.createdAt) >= weekAgo);
+    }
+    if (timeFilter === 'month') {
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return assessments.filter(a => new Date(a.createdAt) >= monthAgo);
+    }
+    return assessments;
+  };
+
+  const filteredAssessments = getFilteredAssessments();
+  const chartData = [...filteredAssessments].reverse().map((a) => ({
+    date: new Date(a.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    Depression: a.scores.depression,
+    Anxiety: a.scores.anxiety,
+    Stress: a.scores.stress,
+  }));
+
+  const getBadge = (severity: string) => {
+    if (severity === 'info') return 'bg-primary/10 text-primary';
+    if (severity === 'warning') return 'bg-yellow-100 text-yellow-800';
+    if (severity === 'danger') return 'bg-red-100 text-red-700';
+    return 'bg-muted text-muted-foreground';
+  };
+
   const cards = [
     {
       icon: ClipboardListIcon,
@@ -151,53 +192,160 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Hero CTA strip */}
-        <div
-          className="rounded-2xl p-6 sm:p-8 mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-          style={{ backgroundColor: '#20ADA0' }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-              <HeartPulseIcon className="w-6 h-6 text-white" />
+        {/* Hero CTA strip - only show if no assessments */}
+        {assessments.length === 0 && (
+          <div
+            className="rounded-2xl p-6 sm:p-8 mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            style={{ backgroundColor: '#20ADA0' }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <HeartPulseIcon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-white font-semibold text-lg">Ready for your first check-in?</p>
+                <p className="text-white/80 text-sm font-light">
+                  The DASS-21 takes less than 5 minutes to complete.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-white font-semibold text-lg">Ready for your next check-in?</p>
-              <p className="text-white/80 text-sm font-light">
-                The DASS-21 takes less than 5 minutes to complete.
+            <Link href="/questionnaire">
+              <Button className="bg-white text-primary hover:bg-white/90 shrink-0 gap-2">
+                Start Assessment
+                <ArrowRightIcon className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && assessments.length === 0 && (
+          <Card className="mb-10">
+            <CardContent className="pt-12 pb-12 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <ClipboardListIcon className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-semibold text-foreground">No assessment taken yet</h2>
+              <p className="text-sm text-muted-foreground font-light max-w-sm mx-auto">
+                Complete your first DASS-21 assessment to start tracking your mental well-being and see your metrics here.
+              </p>
+              <Link href="/questionnaire">
+                <Button className="mt-2">Take Your First Assessment</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Latest assessment results */}
+        {latest && (
+          <>
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-1">Latest Assessment Results</h2>
+              <p className="text-sm text-muted-foreground font-light">
+                Completed on{' '}
+                {new Date(latest.createdAt).toLocaleDateString('en-GB', {
+                  day: 'numeric', month: 'long', year: 'numeric',
+                  hour: '2-digit', minute: '2-digit',
+                })}
               </p>
             </div>
-          </div>
-          <Link href="/questionnaire">
-            <Button className="bg-white text-primary hover:bg-white/90 shrink-0 gap-2">
-              Start Assessment
-              <ArrowRightIcon className="w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
 
-        {/* Score deltas */}
-        {latest && previous && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            {(['depression', 'anxiety', 'stress'] as const).map((key) => {
-              const delta = getDelta(key);
-              const DeltaIcon = delta?.icon;
-              return (
+            {/* Score cards with severity */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              {(['depression', 'anxiety', 'stress'] as const).map((key) => (
                 <Card key={key} className="bg-white">
                   <CardContent className="pt-6 pb-5 text-center">
                     <p className="text-xs text-muted-foreground font-light mb-2 capitalize">{key}</p>
-                    <p className="text-3xl font-bold text-foreground mb-2">{latest.scores[key]}</p>
-                    {delta && DeltaIcon && (
-                      <div className={`flex items-center justify-center gap-1 text-xs font-medium ${delta.color}`}>
-                        <DeltaIcon className="w-3.5 h-3.5" />
-                        {delta.value > 0 ? `${delta.value} pts` : 'No change'}
-                      </div>
-                    )}
+                    <p className="text-4xl font-bold text-foreground mb-3">{latest.scores[key]}</p>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getBadge(latest.feedback[key].severity)}`}>
+                      {latest.feedback[key].title}
+                    </span>
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+
+            {/* Score deltas */}
+            {previous && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                {(['depression', 'anxiety', 'stress'] as const).map((key) => {
+                  const delta = getDelta(key);
+                  const DeltaIcon = delta?.icon;
+                  return (
+                    <Card key={key} className="bg-white">
+                      <CardContent className="pt-6 pb-5 text-center">
+                        <p className="text-xs text-muted-foreground font-light mb-2 capitalize">{key} change</p>
+                        {delta && DeltaIcon && (
+                          <div className={`flex items-center justify-center gap-1 text-lg font-bold ${delta.color}`}>
+                            <DeltaIcon className="w-5 h-5" />
+                            {delta.value > 0 ? `${delta.value} pts` : 'No change'}
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">vs previous assessment</p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
+
+        {/* Mental wellness chart */}
+        <Card className="bg-white mb-6">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <BarChart3Icon className="w-4 h-4 text-primary" />
+                Mental Wellness Over Time
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                <div className="flex rounded-lg bg-muted p-1">
+                  {(['week', 'month', 'all'] as const).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => setTimeFilter(filter)}
+                      className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        timeFilter === filter
+                          ? 'bg-white text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {filter === 'week' ? 'Week' : filter === 'month' ? 'Month' : 'All'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {assessments.length === 0 ? (
+              <div className="text-center py-12 flex flex-col items-center gap-3">
+                <BarChart3Icon className="w-12 h-12 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground font-light">No data returned yet</p>
+                <p className="text-xs text-muted-foreground/60">Complete your first assessment to see your wellness trends</p>
+              </div>
+            ) : filteredAssessments.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis domain={[0, 42]} tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="Depression" stroke="#20ADA0" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="Anxiety" stroke="#8BD4CD" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="Stress" stroke="#166262" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-12 text-sm text-muted-foreground font-light">
+                No assessments in this time period
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Trend summary */}
         {assessments.length >= 2 && (
@@ -212,6 +360,39 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground font-light leading-relaxed">
                 {getTrendSummary()}
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Detailed metrics - only show if assessments exist */}
+        {latest && (
+          <Card className="bg-white mb-6">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">Detailed Metrics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {(['depression', 'anxiety', 'stress'] as const).map((key) => (
+                  <div key={key} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium capitalize text-foreground">{key}</span>
+                      <span className="text-muted-foreground font-light">{latest.scores[key]} / 42</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${(latest.scores[key] / 42) * 100}%`,
+                          backgroundColor: key === 'depression' ? '#20ADA0' : key === 'anxiety' ? '#8BD4CD' : '#166262',
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground font-light leading-relaxed">
+                      {latest.feedback[key].message}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}

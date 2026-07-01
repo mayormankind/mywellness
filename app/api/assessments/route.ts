@@ -4,6 +4,7 @@ import { verifyJwt, getAuthToken } from '@/lib/auth';
 import { assessmentAnswersSchema, type AssessmentAnswers } from '@/lib/validation';
 import { calculateScoringResult, type Severity } from '@/lib/scoring';
 import { generateFeedback } from '@/lib/feedback';
+import { rateLimit } from '@/lib/rate-limit';
 
 function enrichAssessment(a: any) {
   const classifications = {
@@ -58,23 +59,33 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting: 10 requests per hour per user
+  const token = await getAuthToken();
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  const payload = await verifyJwt(token);
+  if (!payload) {
+    return NextResponse.json(
+      { error: 'Invalid token' },
+      { status: 401 }
+    );
+  }
+
+  const rateLimitResult = rateLimit(`assessments:${payload.userId}`, 10, 60 * 60 * 1000);
+
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many assessment submissions. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   try {
-    const token = await getAuthToken();
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const payload = await verifyJwt(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     
     const validation = assessmentAnswersSchema.safeParse(body);

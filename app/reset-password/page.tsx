@@ -5,20 +5,31 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { BrainIcon, ArrowLeftIcon, Loader2Icon, CheckCircleIcon, AlertCircleIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { resetPasswordSchema, type ResetPasswordInput } from '@/lib/validation';
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tokenValid, setTokenValid] = useState(true);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
+    mode: 'onChange',
+  });
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -28,8 +39,7 @@ function ResetPasswordContent() {
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ResetPasswordInput) => {
     setError('');
     setLoading(true);
 
@@ -44,13 +54,13 @@ function ResetPasswordContent() {
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password: data.password }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Reset failed');
+        setError(responseData.error || 'Reset failed');
         return;
       }
 
@@ -137,7 +147,7 @@ function ResetPasswordContent() {
             <CardDescription className="font-light">Enter your new password below</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="password">New Password</Label>
                 <div className="relative">
@@ -145,12 +155,12 @@ function ResetPasswordContent() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    {...register('password')}
                     className="h-10 pr-10"
                   />
+                  {errors.password && (
+                    <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}

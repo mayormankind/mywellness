@@ -86,7 +86,7 @@ export default function Home() {
 
   const steps = [
     { step: '01', title: 'Create Your Account',   desc: 'Register with your FUTA student email and a unique username. Verify your email to activate your account.' },
-    { step: '02', title: 'Take the Assessment',   desc: 'Answer 21 short questions about how you have felt over the past week. No right or wrong answers — be honest.' },
+    { step: '02', title: 'Take the Assessment',   desc: 'Answer 21 short questions about how you are feeling currently. No right or wrong answers — be honest.' },
     { step: '03', title: 'Get Your Results',      desc: 'Receive instant, personalised feedback with severity classifications and self-care recommendations.' },
   ];
 
@@ -377,7 +377,7 @@ export default function Home() {
               <ul className="space-y-3">
                 {[
                   '7 questions each for Depression, Anxiety, and Stress',
-                  'Answers reflect your past week — honest, not right or wrong',
+                  'Answers reflect how you are feeling currently — honest, not right or wrong',
                   'Results are instant, private, and only visible to you',
                   'Flags elevated symptoms and points to FUTA support resources',
                 ].map((point, i) => (

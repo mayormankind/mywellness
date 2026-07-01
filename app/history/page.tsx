@@ -28,7 +28,7 @@ export default function HistoryPage() {
   useEffect(() => {
     const fetchAssessments = async () => {
       try {
-        const response = await fetch('/api/assessments');
+        const response = await fetch('/api/assessments', { credentials: 'include' });
         if (!response.ok) {
           if (response.status === 401) {
             router.push('/login');

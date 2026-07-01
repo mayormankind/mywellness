@@ -49,7 +49,7 @@
 }
 
 :root {
-  --font-sans: 'acumin-pro', system-ui, sans-serif;
+  --font-sans: 'Instrument Sans', system-ui, sans-serif;
 
   /* MindCare / MyWellness palette — no gradients, teal-based */
   --background: oklch(1 0 0);                        /* #ffffff */

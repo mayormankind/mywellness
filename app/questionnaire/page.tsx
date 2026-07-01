@@ -10,10 +10,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const SCALE_LABELS = [
-  'Did not apply to me at all',
-  'Applied to me to some degree',
-  'Applied to a considerable degree',
-  'Applied very much, or most of the time',
+  'Does not apply to me at all',
+  'Applies to me to some degree',
+  'Applies to a considerable degree',
+  'Applies very much, or most of the time',
 ];
 
 export default function QuestionnairePage() {
@@ -41,6 +41,7 @@ export default function QuestionnairePage() {
     try {
       const response = await fetch('/api/assessments', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
       });
@@ -117,7 +118,7 @@ export default function QuestionnairePage() {
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">DASS-21 Assessment</h1>
           <p className="text-muted-foreground font-light text-sm max-w-xl">
-            Please rate each statement based on how much it applies to you currently. <strong className="text-foreground">over the past week</strong>. There are no right or wrong answers.
+            Please rate each statement based on how much it applies to you currently. There are no right or wrong answers.
           </p>
         </div>
 

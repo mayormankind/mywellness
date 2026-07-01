@@ -3,7 +3,9 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'fallback-secret-change-in-production'
+  process.env.JWT_SECRET || (() => {
+    throw new Error('JWT_SECRET environment variable is not set');
+  })()
 );
 const JWT_EXPIRY = '2h';
 

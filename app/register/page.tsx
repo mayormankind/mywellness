@@ -4,36 +4,44 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { BrainIcon, ArrowLeftIcon, Loader2Icon, MailCheckIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { registerSchema, type RegisterInput } from '@/lib/validation';
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    userName: '',
-    email: '',
-    password: '',
-  });
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    mode: 'onChange',
+  });
+
+  const onSubmit = async (data: RegisterInput) => {
     setLoading(true);
+    setSubmittedEmail(data.email);
 
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || 'Registration failed');
+        toast.error(responseData.error || 'Registration failed');
         return;
       }
 
@@ -64,7 +72,7 @@ export default function RegisterPage() {
               </div>
               <h2 className="text-xl font-bold text-foreground">Check your email</h2>
               <p className="text-sm text-muted-foreground font-light max-w-xs mx-auto">
-                We sent a verification link to <strong className="text-foreground">{formData.email}</strong>. Verify your email to activate your account.
+                We sent a verification link to <strong className="text-foreground">{submittedEmail}</strong>. Verify your email to activate your account.
               </p>
               <Link href="/login">
                 <Button className="mt-2 w-full">Go to Login</Button>
@@ -104,18 +112,19 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="userName">Username</Label>
                 <Input
                   id="userName"
                   type="text"
                   placeholder="John Doe"
-                  required
-                  value={formData.userName}
-                  onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+                  {...register('userName')}
                   className="h-10"
                 />
+                {errors.userName && (
+                  <p className="text-xs text-destructive mt-1">{errors.userName.message}</p>
+                )}
               </div>
 
               {/* <div className="space-y-1.5">
@@ -137,11 +146,12 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   placeholder="student@futa.edu.ng"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  {...register('email')}
                   className="h-10"
                 />
+                {errors.email && (
+                  <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -151,11 +161,12 @@ export default function RegisterPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    {...register('password')}
                     className="h-10 pr-10"
                   />
+                  {errors.password && (
+                    <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}

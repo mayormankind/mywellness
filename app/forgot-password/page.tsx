@@ -4,31 +4,41 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { BrainIcon, ArrowLeftIcon, Loader2Icon, MailCheckIcon } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/validation';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordInput>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: 'onChange',
+  });
+
+  const onSubmit = async (data: ForgotPasswordInput) => {
     setLoading(true);
 
     try {
       const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || 'Request failed');
+        toast.error(responseData.error || 'Request failed');
         return;
       }
 
@@ -99,18 +109,19 @@ export default function ForgotPasswordPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email address</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="student@futa.edu.ng"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register('email')}
                   className="h-10"
                 />
+                {errors.email && (
+                  <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               <Button type="submit" disabled={loading} className="w-full h-10 mt-2">
