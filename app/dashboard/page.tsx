@@ -36,6 +36,10 @@ export default function DashboardPage() {
           return;
         }
         const authData = await authRes.json();
+        if (authData.user?.role === 'admin') {
+          router.push('/admin');
+          return;
+        }
         setUser(authData.user);
         if (assessmentsRes.ok) {
           const assessmentsData = await assessmentsRes.json();

@@ -59,10 +59,19 @@ export default function Home() {
   const timelineInView = useInView(timelineRef, { once: true, margin: '-80px' });
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/verify', { credentials: 'include' })
-      .then((r) => r.ok ? setIsLoggedIn(true) : null)
+      .then(async (r) => {
+        if (r.ok) {
+          setIsLoggedIn(true);
+          const data = await r.json();
+          if (data.user?.role === 'admin') {
+            setIsAdmin(true);
+          }
+        }
+      })
       .catch(() => null);
   }, []);
 
@@ -103,8 +112,10 @@ export default function Home() {
             </nav>
             <div className="flex items-center gap-3">
               {isLoggedIn ? (
-                <Link href="/dashboard">
-                  <Button className="h-10 px-5 text-sm font-semibold rounded-lg">Dashboard</Button>
+                <Link href={isAdmin ? "/admin" : "/dashboard"}>
+                  <Button className="h-10 px-5 text-sm font-semibold rounded-lg">
+                    {isAdmin ? "Admin Panel" : "Dashboard"}
+                  </Button>
                 </Link>
               ) : (
                 <>
@@ -191,10 +202,11 @@ export default function Home() {
                 transition={{ duration: 0.7, delay: 0.62, ease: EASE }}
               >
                 {isLoggedIn ? (
-                  <Link href="/dashboard">
+                  <Link href={isAdmin ? "/admin" : "/dashboard"}>
                     <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                       <Button className="h-12 px-8 text-base w-full sm:w-auto gap-2">
-                        Go to Dashboard <ArrowRightIcon className="w-4 h-4" />
+                        {isAdmin ? "Go to Admin Panel" : "Go to Dashboard"}{' '}
+                        <ArrowRightIcon className="w-4 h-4" />
                       </Button>
                     </motion.div>
                   </Link>

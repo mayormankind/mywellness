@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
         id: true,
         userName: true,
         email: true,
+        role: true,
         isVerified: true,
         createdAt: true,
       }

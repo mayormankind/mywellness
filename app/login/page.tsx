@@ -18,7 +18,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     fetch('/api/auth/verify', { credentials: 'include' })
-      .then((r) => { if (r.ok) router.replace('/dashboard'); })
+      .then(async (r) => {
+        if (r.ok) {
+          const data = await r.json();
+          if (data.user?.role === 'admin') {
+            router.replace('/admin');
+          } else {
+            router.replace('/dashboard');
+          }
+        }
+      })
       .catch(() => null);
   }, [router]);
 
@@ -41,7 +50,11 @@ export default function LoginPage() {
       }
 
       toast.success('Welcome back!');
-      router.push('/dashboard');
+      if (data.user?.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch {
       toast.error('An error occurred. Please try again.');
     } finally {
